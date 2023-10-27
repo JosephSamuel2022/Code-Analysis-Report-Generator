@@ -1,22 +1,28 @@
 import streamlit as st
 import g4f
 
-
 g4f.debug.logging = True
 g4f.check_version = False
 
 # Set the page title
-st.title("Code Analysis Report Generator")
+st.title("Code Analysis and Chatbot Dashboard")
 
-# Create a text area for user input
+# Create a text area at the top for user input
 user_input = st.text_area("Enter your code", "", max_chars=15000)
 
-# Check if the user has entered text
-def generate_code_analysis_report(user_input):
-    if user_input:
-        # Compose the query for g4f
-        query = f"{user_input}\n\n"
-        query += '''give a report for the above in this format:
+# Create a tab bar for selecting the active tab
+selected_tab = st.radio("Select a tab:", ["Report Generator", "Chatbot"])
+
+if selected_tab == "Report Generator":
+    # Code for the Report Generator tab
+    st.subheader("Report Generator")
+    
+    # Check if the user has entered text
+    def generate_code_analysis_report(user_input):
+        if user_input:
+            # Compose the query for g4f
+            query = f"{user_input}\n\n"
+            query += '''give a report for the above in this format:
 
 Title(Give a suitable title for the code):
 Executive Summary:
@@ -83,19 +89,47 @@ Recommendations
 Conclusion
 '''
 
-        # Make the API call to g4f
-        response = g4f.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": query}],
-        )
-
-        # Extract and format the generated report
-        generated_report = response
-
-        return generated_report
-
-# Generate and display the code analysis report
-if st.button("Generate Code Analysis Report"):
-    report = generate_code_analysis_report(user_input)
-    st.subheader("Generated Code Analysis Report:")
-    st.write(report)
+            
+            # Make the API call to g4f
+            response = g4f.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": query}],
+            )
+    
+            # Extract and format the generated report
+            generated_report = response
+    
+            return generated_report
+    
+    # Create a space to display the code analysis report
+    report_space = st.empty()
+    
+    # Generate and display the code analysis report
+    if st.button("Generate Code Analysis Report"):
+        generated_report = generate_code_analysis_report(user_input)
+        report_space.subheader("Generated Code Analysis Report:")
+        report_space.write(generated_report)
+    
+elif selected_tab == "Chatbot":
+    # Code for the Chatbot tab
+    st.subheader("Chatbot")
+    
+    # Create a text input for user queries in the Chatbot tab
+    user_query = st.text_input("Enter your query")
+    
+    def generate_response(user_query, user_input):
+        if user_input:
+            user_query += f"Assume you know everything about this code \n\n{user_input}\n\n and you are a Code Expert(Human) ,answer the below question"
+            response = g4f.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": user_query}],
+            )
+            return response
+    
+    # Create a space to display the response from the chatbot
+    response_space = st.empty()
+    
+    if st.button("Ask Chatbot"):
+        chatbot_response = generate_response(user_query, user_input)
+        response_space.subheader("Response From Chatbot:")
+        response_space.write(chatbot_response)
