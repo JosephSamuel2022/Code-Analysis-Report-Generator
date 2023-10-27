@@ -1,7 +1,6 @@
 import streamlit as st
 import g4f
-import matplotlib.pyplot as plt
-import numpy as np
+
 
 g4f.debug.logging = True
 g4f.check_version = False
