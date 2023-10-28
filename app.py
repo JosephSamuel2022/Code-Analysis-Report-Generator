@@ -1,5 +1,7 @@
 import streamlit as st
 import g4f
+import matplotlib.pyplot as plt  # update requirements
+import json
 
 
 g4f.debug.logging = True
@@ -12,18 +14,20 @@ st.title("Code Analysis and Chatbot Dashboard")
 user_input = st.text_area("Enter your code", "", max_chars=15000)
 
 # Create a tab bar for selecting the active tab
-selected_tab = st.radio("Select a tab:", ["Report Generator", "Chatbot"])
+selected_tab = st.radio(
+    "Select a tab:", ["Report Generator", "Chatbot", "Visulaizations"]
+)
 
 if selected_tab == "Report Generator":
     # Code for the Report Generator tab
     st.subheader("Report Generator")
-    
+
     # Check if the user has entered text
     def generate_code_analysis_report(user_input):
         if user_input:
             # Compose the query for g4f
             query = f"{user_input}\n\n"
-            query += '''give a report for the above in this format:
+            query += """give a report for the above in this format:
 
 Title(Give a suitable title for the code):
 Executive Summary:
@@ -88,49 +92,93 @@ Security Analysis
 Testing and Test Coverage
 Recommendations
 Conclusion
-'''
+"""
 
-            
-            # Make the API call to g4f
-            response = g4f.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": query}],
-            )
-    
+            try:
+                # Make the API call to g4f
+                response = g4f.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=[{"role": "user", "content": query}],
+                )
+            except RuntimeError:
+                response = "Oops! The sserver is currently down."
+
             # Extract and format the generated report
             generated_report = response
-    
+
             return generated_report
-    
+
     # Create a space to display the code analysis report
     report_space = st.empty()
-    
+
     # Generate and display the code analysis report
     if st.button("Generate Code Analysis Report"):
         generated_report = generate_code_analysis_report(user_input)
         report_space.subheader("Generated Code Analysis Report:")
         report_space.write(generated_report)
-    
+
 elif selected_tab == "Chatbot":
     # Code for the Chatbot tab
     st.subheader("Chatbot")
-    
+
     # Create a text input for user queries in the Chatbot tab
     user_query = st.text_input("Enter your query")
-    
+
     def generate_response(user_query, user_input):
         if user_input:
             user_query += f"Assume you know everything about this code \n\n{user_input}\n\n and you are a Code Expert(Human) ,answer the below question"
-            response = g4f.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": user_query}],
-            )
+            try:
+                response = g4f.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=[{"role": "user", "content": user_query}],
+                )
+            except RuntimeError:
+                response = "Oops! The sserver is currently down."
             return response
-    
+
     # Create a space to display the response from the chatbot
     response_space = st.empty()
-    
+
     if st.button("Ask Chatbot"):
         chatbot_response = generate_response(user_query, user_input)
         response_space.subheader("Response From Chatbot:")
         response_space.write(chatbot_response)
+
+else:
+
+    def generate_ratings(user_input):
+        if user_input:
+            query = f"For this code \n\n{user_input}\n\n send an array of values for each of the code metrics:"
+            query += """Readability,Performance,Error Handling,Scalability,Testing
+                reply only with the array of length 5 ,a value in the range(1,10) for each cod metric
+                WITHOUT ANY EXTRA DETAILS only the array
+               """
+            try:
+                response = g4f.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=[{"role": "user", "content": query}],
+                )
+            except RuntimeError:
+                response = "Oops! The sserver is currently down."
+            return response
+
+    response_space = st.empty()
+    if st.button("Get Code Metrics"):
+        categories = [
+            "Readability",
+            "Performance",
+            "Error Handling",
+            "Scalability",
+            "Testing and Documentation",
+        ]
+        chatbot_response = generate_ratings(user_input)
+        chatbot_response = json.loads(chatbot_response)
+        response_space.subheader("Code Metrics :")
+        print(type(chatbot_response))
+        fig, ax = plt.subplots(figsize=(10, 6))
+        plt.bar(categories, chatbot_response)
+
+        # Display the bar chart
+        plt.xlabel("Metrics")
+        plt.ylabel("Ratings")
+        st.pyplot(plt)
