@@ -8,7 +8,7 @@ import constants
 openai.api_key = constants.API_KEY
 
 # Set the page title
-st.title("Code Analysis and Chatbot Dashboard")
+st.title("Code Analyzer")
 
 # Create a text area at the top for user input
 user_input = st.text_area("Enter your code", "", max_chars=15000)
