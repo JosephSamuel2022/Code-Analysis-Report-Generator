@@ -1,11 +1,11 @@
 import streamlit as st
-import g4f
+import openai
 import matplotlib.pyplot as plt  # update requirements
 import json
+import constants
 
 
-g4f.debug.logging = True
-g4f.check_version = False
+openai.api_key = constants.API_KEY
 
 # Set the page title
 st.title("Code Analysis and Chatbot Dashboard")
@@ -15,7 +15,7 @@ user_input = st.text_area("Enter your code", "", max_chars=15000)
 
 # Create a tab bar for selecting the active tab
 selected_tab = st.radio(
-    "Select a tab:", ["Report Generator", "Chatbot", "Visulaizations"]
+    "Select a tab:", ["Report Generator", "Chatbot", "Visualizations"]
 )
 
 if selected_tab == "Report Generator":
@@ -96,7 +96,7 @@ Conclusion
 
             try:
                 # Make the API call to g4f
-                response = g4f.ChatCompletion.create(
+                response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
                     messages=[{"role": "user", "content": query}],
                 )
@@ -104,7 +104,7 @@ Conclusion
                 response = "Oops! The sserver is currently down."
 
             # Extract and format the generated report
-            generated_report = response
+            generated_report = response["choices"][0]["message"]["content"]
 
             return generated_report
 
@@ -128,12 +128,14 @@ elif selected_tab == "Chatbot":
         if user_input:
             user_query += f"Assume you know everything about this code \n\n{user_input}\n\n and you are a Code Expert(Human) ,answer the below question"
             try:
-                response = g4f.ChatCompletion.create(
+                response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
                     messages=[{"role": "user", "content": user_query}],
                 )
+                response = response["choices"][0]["message"]["content"]
             except RuntimeError:
                 response = "Oops! The sserver is currently down."
+
             return response
 
     # Create a space to display the response from the chatbot
@@ -154,10 +156,11 @@ else:
                 WITHOUT ANY EXTRA DETAILS only the array
                """
             try:
-                response = g4f.ChatCompletion.create(
+                response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
                     messages=[{"role": "user", "content": query}],
                 )
+                response = response["choices"][0]["message"]["content"]
             except RuntimeError:
                 response = "Oops! The sserver is currently down."
             return response
