@@ -2,10 +2,10 @@ import streamlit as st
 import openai
 import matplotlib.pyplot as plt  # update requirements
 import json
-import constants
+import os
 
 
-openai.api_key = constants.API_KEY
+openai.api_key = os.environ.get("API_KEY")
 
 # Set the page title
 st.title("Code Analyzer")
