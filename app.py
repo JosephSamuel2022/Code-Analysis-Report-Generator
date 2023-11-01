@@ -15,7 +15,7 @@ user_input = st.text_area("Enter your code", "", max_chars=15000)
 
 # Create a tab bar for selecting the active tab
 selected_tab = st.radio(
-    "Select a tab:", ["Report Generator", "Chatbot", "Visulaizations"]
+    "Select a tab:", ["Report Generator", "Chatbot", "Visualizations"]
 )
 
 if selected_tab == "Report Generator":
